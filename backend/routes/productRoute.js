@@ -7,9 +7,10 @@ const {
   deleteProduct,
   getProductDetails,
 } = require("../controllers/productController");
+const { isAuthenticate } = require("../middleware/Auth");
 
 // Route to get all products
-router.get("/products", getAllProducts);
+router.get("/products", isAuthenticate, getAllProducts);
 
 // Route to create a new product
 router.post("/products/new", createProduct);
@@ -21,6 +22,6 @@ router.put("/products/:id", updateProduct);
 router.delete("/products/:id", deleteProduct);
 
 //Route for Get Details
-router.get("/products/:id", getProductDetails);
+router.get("/products/:id", isAuthenticate, getProductDetails);
 
 module.exports = router;
