@@ -28,4 +28,18 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
   if (!email || !password) {
     return next(new ErrorHander("Please enter email and password", 400)); //BAD Request 400
   }
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) {
+    return next(new ErrorHander("Invalid email or password", 401)); //UNAUTHORIZED
+  }
+  const isPasswordMatched = await user.comparePassword(password);
+
+  if (!isPasswordMatched) {
+    return next(new ErrorHander("Invalid email or password", 401)); //UNAUTHORIZED
+  }
+  const token = user.getJWTTocken();
+  res.status(200).json({
+    success: true,
+    token,
+  });
 });
