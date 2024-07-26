@@ -8,20 +8,36 @@ const {
   getProductDetails,
 } = require("../controllers/productController");
 const { isAuthenticate } = require("../middleware/Auth");
+const { authoriseRole } = require("../middleware/Auth"); // Assuming authoriseRole is correctly implemented in Auth.js
 
 // Route to get all products
 router.get("/products", isAuthenticate, getAllProducts);
 
 // Route to create a new product
-router.post("/products/new", createProduct);
+router.post(
+  "/products/new",
+  isAuthenticate,
+  authoriseRole("admin"),
+  createProduct
+);
 
-// Route to update  the product
-router.put("/products/:id", updateProduct);
+// Route to update the product
+router.put(
+  "/products/:id",
+  isAuthenticate,
+  authoriseRole("admin"),
+  updateProduct
+);
 
-//Route to Delete the Product
-router.delete("/products/:id", deleteProduct);
+// Route to delete the product
+router.delete(
+  "/products/:id",
+  isAuthenticate,
+  authoriseRole("admin"),
+  deleteProduct
+);
 
-//Route for Get Details
+// Route to get product details
 router.get("/products/:id", isAuthenticate, getProductDetails);
 
 module.exports = router;

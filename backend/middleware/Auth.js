@@ -17,3 +17,18 @@ exports.isAuthenticate = catchAsyncError(async (req, res, next) => {
   req.user = await User.findById(decodeData.id);
   next();
 });
+
+//Create ,Update product only done by admin
+exports.authoriseRole = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes("admin")) {
+      return next(
+        new ErrorHander(
+          `Role : ${req.user.role} is not allowed to access the resources`,
+          403
+        )
+      );
+    }
+    next();
+  };
+};
