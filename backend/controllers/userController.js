@@ -4,9 +4,10 @@ const crypto = require("crypto");
 const User = require("../models/userModels");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
+const { authoriseRole } = require("../middleware/Auth.js");
+const Product = require("../models/productModels.js");
 
 //Register a User
-
 exports.registerUser = catchAsyncError(async (req, res, next) => {
   const { name, email, password } = req.body;
   const user = await User.create({
@@ -23,7 +24,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 });
 
 //Login a User
-
 exports.loginUser = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -42,7 +42,6 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
 });
 
 //Logout User
-
 exports.logoutUser = catchAsyncError(async (req, res, next) => {
   res.cookie("token", "", {
     expires: new Date(0), // Expires immediately
@@ -185,20 +184,24 @@ exports.updateUserProfile = catchAsyncError(async (req, res, next) => {
   res
     .status(200)
     .json({ sucees: true, message: "User profile updated successfully" });
-
-  sendToken(user, 200, res);
 });
 
 //Get all User ->> that can be seen by admin
 exports.getAllUsers = catchAsyncError(async (req, res, next) => {
-  const user = await User.find();
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: `Access denied. Admins only. here role is ${req.user.role}`,
+    });
+  }
+
+  const users = await User.find();
 
   res.status(200).json({
     success: true,
-    user,
+    users,
   });
 });
-
 //Get single user by admin
 exports.getSingleUser = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.params.id);
@@ -208,5 +211,85 @@ exports.getSingleUser = catchAsyncError(async (req, res, next) => {
   res.status(200).json({
     success: true,
     user,
+  });
+});
+
+//update user role by ---(Admin)
+exports.updateUserRole = catchAsyncError(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  //we will use cloudinary later
+  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  await user.save();
+  res
+    .status(200)
+    .json({ sucees: true, message: "User profile updated successfully" });
+});
+
+//delete user by there id by ----- admin
+exports.deleteUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  // we will remove the cloudinary data later
+
+  if (!user) {
+    return next(new ErrorHander("User not found", 404));
+  }
+  await user.remove();
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
+  });
+});
+
+//create new review and update new review
+exports.createReview = catchAsyncError(async (req, res, next) => {
+  const { rating, comment, productId } = req.body;
+  const review = {
+    user: req.user._id,
+    name: req.user.name,
+    rating: Number(rating),
+    comment,
+  };
+
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    return next(new Error("Product not found"));
+  }
+
+  const isReviewed = product.reviews.find(
+    (rev) => rev.user && rev.user.toString() === req.user._id.toString()
+  );
+
+  if (isReviewed) {
+    product.reviews.forEach((rev) => {
+      if (rev.user && rev.user.toString() === req.user._id.toString()) {
+        rev.comment = comment;
+        rev.rating = rating;
+      }
+    });
+  } else {
+    product.reviews.push(review);
+    product.numberOfReviews = product.reviews.length;
+  }
+  let avg = 0;
+  product.ratings = product.reviews.forEach((rev) => {
+    avg += rev.rating;
+    avg /= product.reviews.length;
+  });
+  await product.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    success: true,
+    message: isReviewed ? "Review updated" : "Review added",
   });
 });

@@ -11,7 +11,11 @@ const {
   updateUserProfile,
   getAllUsers,
   getSingleUser,
+  updateUserRole,
+  deleteUser,
+  createReview,
 } = require("../controllers/userController");
+
 const { isAuthenticate, authoriseRole } = require("../middleware/Auth");
 const router = express.Router();
 
@@ -30,8 +34,14 @@ router.get("/password/reset/:token", (req, res) => {
 });
 router.get("/me", isAuthenticate, getUserDetails);
 router.put("/password/update", isAuthenticate, changePassword);
+
 router.put("/me/update", isAuthenticate, updateUserProfile);
-router.get("admin/users", authoriseRole("admin"), getAllUsers);
-router.get("admin/user/:id", authoriseRole("admin"), getSingleUser);
+router.get("/admin/users", isAuthenticate, authoriseRole("admin"), getAllUsers);
+router
+  .get("/admin/user/:id", authoriseRole("admin"), getSingleUser)
+  .put(isAuthenticate, authoriseRole("admin"), updateUserRole)
+  .delete(isAuthenticate, authoriseRole("admin"), deleteUser);
+
+router.put("/review", isAuthenticate, createReview);
 
 module.exports = router;
