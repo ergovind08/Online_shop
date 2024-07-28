@@ -1,6 +1,5 @@
 const express = require("express");
 const path = require("path");
-
 const {
   registerUser,
   loginUser,
@@ -8,8 +7,12 @@ const {
   forgotPassword,
   resetPassword,
   getUserDetails,
+  changePassword,
+  updateUserProfile,
+  getAllUsers,
+  getSingleUser,
 } = require("../controllers/userController");
-const { isAuthenticate } = require("../middleware/Auth");
+const { isAuthenticate, authoriseRole } = require("../middleware/Auth");
 const router = express.Router();
 
 router.post("/register", registerUser);
@@ -26,5 +29,9 @@ router.get("/password/reset/:token", (req, res) => {
   });
 });
 router.get("/me", isAuthenticate, getUserDetails);
+router.put("/password/update", isAuthenticate, changePassword);
+router.put("/me/update", isAuthenticate, updateUserProfile);
+router.get("admin/users", authoriseRole("admin"), getAllUsers);
+router.get("admin/user/:id", authoriseRole("admin"), getSingleUser);
 
 module.exports = router;

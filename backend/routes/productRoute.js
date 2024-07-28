@@ -15,7 +15,7 @@ router.get("/products", isAuthenticate, getAllProducts);
 
 // Route to create a new product
 router.post(
-  "/products/new",
+  "admin/products/new",
   isAuthenticate,
   authoriseRole("admin"),
   createProduct
@@ -23,7 +23,7 @@ router.post(
 
 // Route to update the product
 router.put(
-  "/products/:id",
+  "admin/products/:id",
   isAuthenticate,
   authoriseRole("admin"),
   updateProduct
@@ -31,7 +31,7 @@ router.put(
 
 // Route to delete the product
 router.delete(
-  "/products/:id",
+  "admin/products/:id",
   isAuthenticate,
   authoriseRole("admin"),
   deleteProduct

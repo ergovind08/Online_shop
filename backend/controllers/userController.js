@@ -118,7 +118,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
   }
 });
 
-//Reset Password
+//Reset Password form email
 exports.resetPassword = catchAsyncError(async (req, res, next) => {
   const resetPasswordToken = crypto
     .createHash("sha256")
@@ -143,8 +143,70 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 });
 
 // Get User Details
-
 exports.getUserDetails = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   res.status(200).json({ sucees: true, user });
+});
+
+//Change password
+exports.changePassword = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select("+password");
+  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+  if (!isPasswordMatched) {
+    return next(new ErrorHander("Old Password is incorrect", 400));
+  }
+  if (req.body.newPassword != req.body.confirmPassword) {
+    return next(new ErrorHander("Both password not matched", 400));
+  }
+  user.password = req.body.newPassword;
+  await user.save();
+  res
+    .status(200)
+    .json({ sucees: true, message: "Password changed successfully" });
+
+  sendToken(user, 200, res);
+});
+
+//Update user Profile
+exports.updateUserProfile = catchAsyncError(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  //we will use cloudinary later
+  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  await user.save();
+  res
+    .status(200)
+    .json({ sucees: true, message: "User profile updated successfully" });
+
+  sendToken(user, 200, res);
+});
+
+//Get all User ->> that can be seen by admin
+exports.getAllUsers = catchAsyncError(async (req, res, next) => {
+  const user = await User.find();
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+});
+
+//Get single user by admin
+exports.getSingleUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorHander("User not found", 404));
+  }
+  res.status(200).json({
+    success: true,
+    user,
+  });
 });
