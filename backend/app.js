@@ -1,20 +1,23 @@
 const express = require("express");
-const app = express();
-const errorMiddleware = require("./middleware/error");
 const cookieParser = require("cookie-parser");
+const path = require("path");
+const errorMiddleware = require("./middleware/error");
+const userRoutes = require("./routes/userRoute");
+const productRoutes = require("./routes/productRoute");
+
+const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
-//routes import
-const product = require("./routes/productRoute");
-const user = require("./routes/userRoute");
+// Serve static files
+app.use(express.static(path.join(__dirname, "public")));
 
-//middleware for getting result from backend
-app.use("/api/v1", user);
-app.use("/api/v1", product);
+// Middleware for routes
+app.use("/api/v1", userRoutes);
+app.use("/api/v1", productRoutes);
 
-//middleware for error
+// Middleware for error
 app.use(errorMiddleware);
 
 module.exports = app;

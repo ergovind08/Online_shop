@@ -1,6 +1,6 @@
 const ErrorHander = require("../utils/errorHander");
 const catchAsyncError = require("../middleware/catchAsyncError");
-
+const crypto = require("crypto");
 const User = require("../models/userModels");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
@@ -89,6 +89,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
         <p style="color: #555; margin-top: 20px;">If you did not request this email, please ignore it.</p>
         <p style="color: #555;">Thank you,<br>Online-Order Team</p>
       </div>
+      
     `,
     });
 
@@ -115,4 +116,35 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
     return next(new ErrorHander(error.message, 500));
   }
+});
+
+//Reset Password
+exports.resetPassword = catchAsyncError(async (req, res, next) => {
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+  if (!user) {
+    return next(new ErrorHander("Reset password token is invalid", 400));
+  }
+  if (req.body.password != req.body.confirmPassword) {
+    return next(new ErrorHander("Both password not matched", 400));
+  }
+  user.password = req.body.password;
+  user.resetPasswordExpire = undefined;
+  user.resetPasswordToken = undefined;
+  await user.save();
+  sendToken(user, 200, res);
+});
+
+// Get User Details
+
+exports.getUserDetails = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).json({ sucees: true, user });
 });
