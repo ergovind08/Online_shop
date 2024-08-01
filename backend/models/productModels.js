@@ -15,7 +15,7 @@ const productSchema = new mongoose.Schema({
     required: [true, "Please enter price"],
     maxlength: [6, "Price cannot exceed 6 digits"],
   },
-  rating: {
+  ratings: {
     type: Number,
     default: 0,
   },
@@ -61,6 +61,11 @@ const productSchema = new mongoose.Schema({
       },
     },
   ],
+  createdByUser: {
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
