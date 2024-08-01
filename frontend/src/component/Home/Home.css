@@ -64,16 +64,18 @@
   .container {
     display: flex;
     margin: 2vmax auto;
-    width: 80vw;
+    width: 90vw;
+    /* gap: 0.2em; */
     flex-wrap: wrap;
     justify-content: center;
     max-width: 100%;
   }
   
   .productCard {
-    width: 14vmax;
+    width: 18vmax;
     display: flex;
     flex-direction: column;
+    align-items: center;
     text-decoration: none;
     color: rgb(48, 48, 48);
     margin: 2vmax;
@@ -106,7 +108,7 @@
   
   .productCard > span {
     margin: 0.5vmax;
-    color: tomato;
+    color: black;
     font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
     font-size: 1vmax;
   }
@@ -135,4 +137,4 @@
       margin: 0 0.5vmax;
       font: 300 1vmax "Roboto";
     }
-  }
+  } 
