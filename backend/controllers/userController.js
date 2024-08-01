@@ -6,6 +6,7 @@ const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const { authoriseRole } = require("../middleware/Auth.js");
 const Product = require("../models/productModels.js");
+const { query } = require("express");
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -44,10 +45,10 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
 //Logout User
 exports.logoutUser = catchAsyncError(async (req, res, next) => {
   res.cookie("token", "", {
-    expires: new Date(0), // Expires immediately
+    expires: new Date(0),
     httpOnly: true,
     sameSite: "strict",
-    secure: process.env.NODE_ENV === "production", // set to true in production
+    secure: process.env.NODE_ENV === "production",
   });
 
   res.status(200).json({
@@ -292,4 +293,45 @@ exports.createReview = catchAsyncError(async (req, res, next) => {
     success: true,
     message: isReviewed ? "Review updated" : "Review added",
   });
+});
+
+//Get All Reviews of a Single Product
+exports.getReviews = catchAsyncError(async (req, res, next) => {
+  const product = await Product.findById(req.query.id);
+  if (!product) {
+    return next(new ErrorHander("Product Not Found with this Id ", 404));
+  }
+  res.status(200).json({
+    success: true,
+    reviews: product.reviews,
+  });
+});
+
+//Delete Review
+exports.deleteReview = catchAsyncError(async (req, res, next) => {
+  const product = await Product.findById(req.query.productId);
+  if (!product) {
+    return next(new ErrorHander("Product Not Found with this Id ", 404));
+  }
+  const reviews = product.reviews.filter(
+    (rev) => rev._id.toString() != req,
+    query.id.toString()
+  );
+  let avg = 0;
+  reviews.forEach((rev) => (avg += rev.rating));
+  const rating = avg / reviews.length;
+  const numberOfReviews = reviews.length;
+  await product.findByIdAndUpdate(
+    req.query.productId,
+    {
+      reviews,
+      rating,
+      numberOfReviews,
+    },
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    }
+  );
 });

@@ -14,6 +14,8 @@ const {
   updateUserRole,
   deleteUser,
   createReview,
+  deleteReview,
+  getReviews,
 } = require("../controllers/userController");
 
 const { isAuthenticate, authoriseRole } = require("../middleware/Auth");
@@ -43,5 +45,7 @@ router
   .delete(isAuthenticate, authoriseRole("admin"), deleteUser);
 
 router.put("/review", isAuthenticate, createReview);
+router.get("/reviews", getReviews);
+router.delete("/reviews", isAuthenticate, deleteReview);
 
 module.exports = router;
